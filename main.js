@@ -493,8 +493,8 @@ function calculate() {
         if (pC < 0.70) {
 
             adviceText +=
-                `\n\n⚠️ При этом свободный наклон сильно отстаёт.\n` +
-                `Его желательно подтянуть отдельно.`;
+                `\n\n⚠️ Свободный наклон сильно отстаёт → \n` +
+                `${incline_reference} кг.`;
 
         }
 
@@ -773,6 +773,9 @@ let forecast_c =
         triangle_c_target
     );
 
+
+totalText +=
+    `\n\n<b>🔮 АВТО-ПРОГНОЗ:</b>\n`;
 
 totalText +=
     `Горизонтальный жим: ${a_curr} → ${forecast_a} кг\n`;
