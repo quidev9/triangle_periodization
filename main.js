@@ -45,6 +45,7 @@ function getTriangleCoords(a, b, c, scale, offsetX, offsetY) {
     return {x1, y1, x2, y2, x3, y3};
 }
 
+
 function drawSVG(svgId, coords, a, b, c, colorFill, colorStroke) {
     let svg = document.getElementById(svgId);
     if (!svg) {
@@ -56,8 +57,12 @@ function drawSVG(svgId, coords, a, b, c, colorFill, colorStroke) {
     if (!coords) return;
 
     const SVG_NS = "http://www.w3.org/2000/svg";
+    
     let polygon = document.createElementNS(SVG_NS, "polygon");
-    polygon.setAttribute("points", `${coords.x1},${coords.y1} ${coords.x2},${coords.y2} ${coords.x3},${coords.y3}`);
+    polygon.setAttribute(
+        "points",
+        `${coords.x1},${coords.y1} ${coords.x2},${coords.y2} ${coords.x3},${coords.y3}`
+    );
     polygon.setAttribute("fill", colorFill);
     polygon.setAttribute("stroke", colorStroke);
     polygon.setAttribute("stroke-width", "3");
@@ -75,7 +80,12 @@ function drawSVG(svgId, coords, a, b, c, colorFill, colorStroke) {
         svg.appendChild(text);
     }
 
-    let points = [[coords.x1, coords.y1], [coords.x2, coords.y2], [coords.x3, coords.y3]];
+    let points = [
+        [coords.x1, coords.y1],
+        [coords.x2, coords.y2],
+        [coords.x3, coords.y3]
+    ];
+
     points.forEach(p => {
         let circle = document.createElementNS(SVG_NS, "circle");
         circle.setAttribute("cx", p[0]); 
@@ -85,14 +95,35 @@ function drawSVG(svgId, coords, a, b, c, colorFill, colorStroke) {
         svg.appendChild(circle);
     });
 
-    // Подписи сторон (исправлена ошибка с пропущенным аргументом цвета)
-    addText(`A: ${a.toFixed(1)} кг`, coords.x1 - 10, (coords.y1 + coords.y2)/2, "end", "#666");
-    addText(`B: ${b.toFixed(1)} кг`, (coords.x2 + coords.x3)/2 + 10, (coords.y2 + coords.y3)/2 - 5, "start", colorStroke);
-    addText(`C: ${c.toFixed(1)} кг`, (coords.x1 + coords.x3)/2 + 10, (coords.y1 + coords.y3)/2 + 15, "start", colorStroke);
+    // Подписи сторон
+    addText(
+        `A: ${a.toFixed(1)} кг`,
+        coords.x1 - 10,
+        (coords.y1 + coords.y2) / 2,
+        "end",
+        "#666"
+    );
+
+    addText(
+        `B: ${b.toFixed(1)} кг`,
+        (coords.x2 + coords.x3) / 2 + 10,
+        (coords.y2 + coords.y3) / 2 - 5,
+        "start",
+        colorStroke
+    );
+
+    addText(
+        `C: ${c.toFixed(1)} кг`,
+        (coords.x1 + coords.x3) / 2 + 10,
+        (coords.y1 + coords.y3) / 2 + 15,
+        "start",
+        colorStroke
+    );
 }
 
 
 function calculate() {
+
     // 1. Получаем данные
     let a_curr = parseFloat(document.getElementById('bench_a').value) || 0;
     let b_curr = parseFloat(document.getElementById('smith_b').value) || 0;
@@ -103,7 +134,11 @@ function calculate() {
     let errorMsg = document.getElementById('error-msg');
     
     // 2. Проверка треугольника
-    if ((a_curr + b_curr <= c_curr) || (a_curr + c_curr <= b_curr) || (b_curr + c_curr <= a_curr)) {
+    if (
+        (a_curr + b_curr <= c_curr) ||
+        (a_curr + c_curr <= b_curr) ||
+        (b_curr + c_curr <= a_curr)
+    ) {
         if(errorMsg) errorMsg.style.display = 'block';
         return;
     } else {
@@ -128,100 +163,223 @@ function calculate() {
     let balanceRatio = b_curr > 0 ? (b_curr / c_curr) : 0; 
 
 
-    if (pC < PERCENT_TO_HORIZON && c_target != Math.floor((a_target * 0.85) / 10) * 10) {
+    // ============================================================
+    // 1. ДЕФИЦИТ ВЕРХА
+    // ============================================================
+
+    if (
+        pC < PERCENT_TO_HORIZON &&
+        c_target != Math.floor((a_target * 0.85) / 10) * 10
+    ) {
         c_target = Math.floor((a_target * 0.85) / 10) * 10;
         b_target = a_target;
         
-        let c_diff = Math.max(STEP_ADJUST, Math.min(15, c_target - c_curr));
+        let c_diff = Math.max(
+            STEP_ADJUST,
+            Math.min(15, c_target - c_curr)
+        );
         
         if (pC < 0.70) {
-            adviceText = `❌ КРИТИЧЕСКИЙ ДЕФИЦИТ ВЕРХА!\nФокус только на свободном наклоне: +${c_diff} кг.\n`;
+            adviceText =
+                `❌ КРИТИЧЕСКИЙ ДЕФИЦИТ ВЕРХА!\n` +
+                `Фокус только на свободном наклоне: +${c_diff} кг.\n`;
         }
         else {
-            adviceText = `❌ ДЕФИЦИТ ВЕРХА!\nФокус на свободном наклоне: +${c_diff} кг.\n`;
+            adviceText =
+                `❌ ДЕФИЦИТ ВЕРХА!\n` +
+                `Фокус на свободном наклоне: +${c_diff} кг.\n`;
         }
-        isBalanced = false;
-    } 
 
-    // ДОБАВЛЕНО ТОЛЬКО ЭТО:
-    // если Смит сильнее горизонта — не ругаем базу,
-    // а предлагаем попробовать горизонт
-    else if (b_curr > a_curr) {
+        isBalanced = false;
+    }
+
+
+    // ============================================================
+    // 2. СМИТ РАВЕН ИЛИ ВЫШЕ ГОРИЗОНТА
+    // ============================================================
+
+    else if (b_curr >= a_curr) {
 
         let horizon_8 = Math.round((b_curr * 0.85) / 5) * 5;
         let horizon_3 = Math.round((b_curr * 0.925) / 5) * 5;
 
-        adviceText = `🎯 МОЖНО ПРОБОВАТЬ ГОРИЗОНТ!\nОриентир:\n${horizon_8} кг × 8\n${horizon_3} кг × 3`;
+        adviceText =
+            `🎯 МОЖНО ПРОБОВАТЬ ГОРИЗОНТ!\n` +
+            `Ориентир:\n` +
+            `${horizon_8} кг × 8\n` +
+            `${horizon_3} кг × 3`;
 
         isBalanced = true;
     }
+
+
+    // ============================================================
+    // 3. СМИТ СЛАБЕЕ ГОРИЗОНТА
+    // ============================================================
 
     else if (pB < PERCENT_TO_HORIZON || balanceRatio < 1) {
 
         let b_diff;
-        b_diff = a_curr - b_curr
+        b_diff = a_curr - b_curr;
 
         b_diff = Math.round(b_diff * 2) / 2; 
         b_target = b_curr + b_diff;
-        console.log(balanceRatio)
+
+        console.log(balanceRatio);
 
         if (balanceRatio < (1 - BALANCE_TOLERANCE)) {
-            adviceText = `⚠️ ДИСБАЛАНС СИЛЫ!\nСмит значительно слабее Наклона (потеря контроля веса).\nФокус на Смите: +${b_diff} кг`;
+            adviceText =
+                `⚠️ ДИСБАЛАНС СИЛЫ!\n` +
+                `Смит значительно слабее Наклона (потеря контроля веса).\n` +
+                `Фокус на Смите: +${b_diff} кг`;
         }
         else {
-            adviceText = `⚠️ СЛАБАЯ БАЗА.\nСмит отстает от горизонта (<90%).\nФокус на Смите: +${b_diff} кг.`;
+            adviceText =
+                `⚠️ СЛАБАЯ БАЗА.\n` +
+                `Смит отстает от горизонта (<90%).\n` +
+                `Фокус на Смите: +${b_diff} кг.`;
         }
+
         isBalanced = false;
     }
+
+
+    // ============================================================
+    // 4. ДИСБАЛАНС ТЕХНИКИ
+    // ============================================================
+
     else if (pB <= pC) {
 
         let b_diff = STEP_ADJUST;
+
         if (Math.abs(pB - pC) > 0.15) {
             b_diff = Math.min(10, b_diff * 1.5);
         }
+
         b_diff = Math.round(b_diff * 2) / 2;
         b_target = b_curr + b_diff;
-        adviceText = `⚠️ ДИСБАЛАНС ТЕХНИКИ!\nФокус на Смите: +${b_diff} кг`;
+
+        adviceText =
+            `⚠️ ДИСБАЛАНС ТЕХНИКИ!\n` +
+            `Фокус на Смите: +${b_diff} кг`;
     }
+
+
+    // ============================================================
+    // 5. ИДЕАЛЬНЫЙ БАЛАНС
+    // ============================================================
+
     else {
-        a_target = a_curr + STEP_BASE; 
-        adviceText = "✅ ИДЕАЛЬНЫЙ БАЛАНС.\nБаза и верх в норме: Горизонт +7.5 кг.";
+
+        a_target = a_curr + STEP_BASE;
+
+        adviceText =
+            "✅ ИДЕАЛЬНЫЙ БАЛАНС.\n" +
+            "База и верх в норме: Горизонт +7.5 кг.";
+
         isBalanced = true;
     }
 
+
+    // Округление целей
     a_target = Math.round(a_target * 10) / 10;
     b_target = Math.round(b_target * 10) / 10;
     c_target = Math.round(c_target * 10) / 10;
 
-    let max_val = Math.max(a_curr, b_curr, c_curr, a_target, b_target, c_target);
+
+    // ============================================================
+    // SVG
+    // ============================================================
+
+    let max_val = Math.max(
+        a_curr,
+        b_curr,
+        c_curr,
+        a_target,
+        b_target,
+        c_target
+    );
+
     let scale = (max_val > 0) ? (160 / max_val) : 1; 
-    let offsetX = 110, offsetY = 220;
+    let offsetX = 110;
+    let offsetY = 220;
 
-    let coords_cur = getTriangleCoords(a_curr, b_curr, c_curr, scale, offsetX, offsetY);
-    let coords_tar = getTriangleCoords(a_target, b_target, c_target, scale, offsetX, offsetY);
+    let coords_cur = getTriangleCoords(
+        a_curr,
+        b_curr,
+        c_curr,
+        scale,
+        offsetX,
+        offsetY
+    );
 
-    drawSVG('svg_current', coords_cur, a_curr, b_curr, c_curr, 'rgba(230, 230, 255, 0.6)', 'gray');
-    drawSVG('svg_target', coords_tar, a_target, b_target, c_target, 'rgba(212, 247, 216, 0.6)', '#3a7463');
+    let coords_tar = getTriangleCoords(
+        a_target,
+        b_target,
+        c_target,
+        scale,
+        offsetX,
+        offsetY
+    );
+
+    drawSVG(
+        'svg_current',
+        coords_cur,
+        a_curr,
+        b_curr,
+        c_curr,
+        'rgba(230, 230, 255, 0.6)',
+        'gray'
+    );
+
+    drawSVG(
+        'svg_target',
+        coords_tar,
+        a_target,
+        b_target,
+        c_target,
+        'rgba(212, 247, 216, 0.6)',
+        '#3a7463'
+    );
+
+
+    // ============================================================
+    // ВЫВОД
+    // ============================================================
 
     let verdictBox = document.getElementById('verdict');
     let statusTitle = "СТАТИСТИКА:\n";
     
-    let details = `Наклон: ${(pC*100).toFixed(1)}% от горизонта.\n`;
-    details += `Смит: ${(pB*100).toFixed(1)}% от горизонта.\n`;
-    details += `Баланс Смит/Наклон: ${(((pB + pC)/2)*100).toFixed(1)}%.\n\n`;
+    let details =
+        `Наклон: ${(pC * 100).toFixed(1)}% от горизонта.\n`;
 
-    let totalText = `<b>${statusTitle}</b>${details}`;
+    details +=
+        `Смит: ${(pB * 100).toFixed(1)}% от горизонта.\n`;
+
+    details +=
+        `Баланс Смит/Наклон: ${(((pB + pC) / 2) * 100).toFixed(1)}%.\n\n`;
+
+    let totalText =
+        `<b>${statusTitle}</b>${details}`;
     
     if (isBalanced) {
-        totalText += `<span style="color: var(--accent-green);">${adviceText}</span>`;
+        totalText +=
+            `<span style="color: var(--accent-green);">${adviceText}</span>`;
     } else {
-        totalText += `<span style="color: var(--accent-red);">${adviceText}</span>`;
+        totalText +=
+            `<span style="color: var(--accent-red);">${adviceText}</span>`;
     }
 
     totalText += `\n\n<b>🔮 АВТО-ПРОГНОЗ:</b>\n`;
-    totalText += `Горизонтальный жим: ${a_curr} → ${a_target} кг\n`;
-    totalText += `Смит 30°: ${b_curr} → ${b_target} кг\n`;
-    totalText += `Наклон свободный: ${c_curr} → ${c_target} кг`;
+
+    totalText +=
+        `Горизонтальный жим: ${a_curr} → ${a_target} кг\n`;
+
+    totalText +=
+        `Смит 30°: ${b_curr} → ${b_target} кг\n`;
+
+    totalText +=
+        `Наклон свободный: ${c_curr} → ${c_target} кг`;
 
     if(verdictBox) {
         verdictBox.innerHTML = totalText;
@@ -235,8 +393,10 @@ calculate();
 
 
 const inputs = ['bench_a', 'smith_b', 'incline_c'];
+
 inputs.forEach(id => {
     const el = document.getElementById(id);
+
     if (el) {
         el.addEventListener('input', calculate);
     }
