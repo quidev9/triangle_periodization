@@ -574,18 +574,28 @@ function calculate() {
     // НАКЛОН
     // ============================================================
 
-    let triangle_c_min =
-        Math.round(
-            (a_curr * 0.80) / 2.5
-        ) * 2.5;
+    const INCLINE_RATIO = 0.80;
+const MAX_INCLINE_STEP = 5;
 
-    let triangle_c_target =
-        Math.max(
-            c_curr,
-            triangle_c_min
-        );
+// Желаемый уровень наклона относительно горизонта
+let triangle_c_reference =
+    Math.round(
+        (a_curr * INCLINE_RATIO) / 2.5
+    ) * 2.5;
 
+// За один прогноз добавляем максимум 5 кг
+let triangle_c_target =
+    Math.min(
+        c_curr + MAX_INCLINE_STEP,
+        triangle_c_reference
+    );
 
+// Никогда не уменьшаем текущий вес
+triangle_c_target =
+    Math.max(
+        c_curr,
+        triangle_c_target
+    );
     // ============================================================
     // ОКРУГЛЕНИЕ ПРОГНОЗНОГО ТРЕУГОЛЬНИКА
     // ============================================================
