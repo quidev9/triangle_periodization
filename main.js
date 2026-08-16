@@ -522,7 +522,7 @@ function calculate() {
 
         let incline_reference =
             Math.round(
-                (a_curr * 0.825) / 2.5
+                (a_curr * 0.80) / 2.5
             ) * 2.5;
 
 
@@ -537,7 +537,7 @@ function calculate() {
         else if (pC < 0.85) {
 
             adviceText +=
-                `\n\nℹ️ Наклон немного отстаёт от ориентира 80–85% → ` +
+                `\n\nℹ️ Наклон немного отстаёт 80–85% → ` +
                 `${incline_reference} кг.`;
         }
     }
