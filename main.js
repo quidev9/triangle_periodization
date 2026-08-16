@@ -519,7 +519,7 @@ function calculate() {
 
         }
 
-        else if (pC < 0.80) {
+        else if (pC <= 0.775) {
 
             adviceText +=
                 `\n\nℹ️ Наклон немного отстаёт: ` +
