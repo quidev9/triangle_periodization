@@ -11,10 +11,10 @@ function loadFromCookies() {
     const nameA = "bench_a=";
     const nameB = "smith_b=";
     const nameC = "incline_c=";
-    
+
     let decodedCookie = decodeURIComponent(document.cookie);
     let ca = decodedCookie.split(';');
-    
+
     let valA = null;
     let valB = null;
     let valC = null;
@@ -22,29 +22,41 @@ function loadFromCookies() {
     for (let i = 0; i < ca.length; i++) {
         let c = ca[i].trim();
 
-        if (c.indexOf(nameA) == 0) {
+        if (c.indexOf(nameA) === 0) {
             valA = c.substring(nameA.length);
         }
 
-        if (c.indexOf(nameB) == 0) {
+        if (c.indexOf(nameB) === 0) {
             valB = c.substring(nameB.length);
         }
 
-        if (c.indexOf(nameC) == 0) {
+        if (c.indexOf(nameC) === 0) {
             valC = c.substring(nameC.length);
         }
     }
 
     if (valA !== null) {
-        document.getElementById('bench_a').value = valA;
+        const input = document.getElementById('bench_a');
+
+        if (input) {
+            input.value = valA;
+        }
     }
 
     if (valB !== null) {
-        document.getElementById('smith_b').value = valB;
+        const input = document.getElementById('smith_b');
+
+        if (input) {
+            input.value = valB;
+        }
     }
 
     if (valC !== null) {
-        document.getElementById('incline_c').value = valC;
+        const input = document.getElementById('incline_c');
+
+        if (input) {
+            input.value = valC;
+        }
     }
 }
 
@@ -53,7 +65,14 @@ function loadFromCookies() {
 // ТРЕУГОЛЬНИК
 // ============================================================
 
-function getTriangleCoords(a, b, c, scale, offsetX, offsetY) {
+function getTriangleCoords(
+    a,
+    b,
+    c,
+    scale,
+    offsetX,
+    offsetY
+) {
 
     if (
         (a + b <= c) ||
@@ -62,7 +81,7 @@ function getTriangleCoords(a, b, c, scale, offsetX, offsetY) {
     ) {
         return null;
     }
-    
+
     let cos_alpha =
         (a * a + c * c - b * b) /
         (2 * a * c);
@@ -80,7 +99,7 @@ function getTriangleCoords(a, b, c, scale, offsetX, offsetY) {
                 1 - cos_alpha * cos_alpha
             )
         );
-    
+
     let x1 = offsetX;
     let y1 = offsetY;
 
@@ -94,7 +113,7 @@ function getTriangleCoords(a, b, c, scale, offsetX, offsetY) {
     let y3 =
         offsetY -
         c * cos_alpha * scale;
-    
+
     return {
         x1,
         y1,
@@ -115,15 +134,17 @@ function drawSVG(
     colorFill,
     colorStroke
 ) {
+
     let svg = document.getElementById(svgId);
 
     if (!svg) {
         console.error(
             `SVG элемент с id="${svgId}" не найден!`
         );
+
         return;
     }
-    
+
     svg.innerHTML = '';
 
     if (!coords) {
@@ -132,7 +153,7 @@ function drawSVG(
 
     const SVG_NS =
         "http://www.w3.org/2000/svg";
-    
+
     let polygon =
         document.createElementNS(
             SVG_NS,
@@ -171,6 +192,7 @@ function drawSVG(
         anchor,
         color
     ) {
+
         let text =
             document.createElementNS(
                 SVG_NS,
@@ -213,6 +235,10 @@ function drawSVG(
     }
 
 
+    // ========================================================
+    // ТОЧКИ
+    // ========================================================
+
     let points = [
         [coords.x1, coords.y1],
         [coords.x2, coords.y2],
@@ -251,7 +277,9 @@ function drawSVG(
     });
 
 
-    // Подписи сторон
+    // ========================================================
+    // ПОДПИСИ СТОРОН
+    // ========================================================
 
     addText(
         `A: ${a.toFixed(1)} кг`,
@@ -376,8 +404,13 @@ function calculate() {
             ? (b_curr / a_curr)
             : 0;
 
+
+    // Исправлено:
+    // раньше проверялся b_curr > 0,
+    // хотя деление идёт на c_curr.
+
     let balanceRatio =
-        b_curr > 0
+        c_curr > 0
             ? (b_curr / c_curr)
             : 0;
 
@@ -429,21 +462,13 @@ function calculate() {
 
     // ============================================================
     // 2. СМИТ РАВЕН ИЛИ ВЫШЕ ГОРИЗОНТА
-    //
-    // Наклон НЕ БЛОКИРУЕТ прогресс.
-    //
-    // 85% Смита -> 8 повторов
-    // 92.5% Смита -> 3 повтора
-    //
-    // 3 повтора используются для расчёта 1ПМ
-    // по формуле Бжицки.
     // ============================================================
 
     else {
 
         let horizon_8 =
             Math.round(
-                (b_curr * 0.85) / 5
+                (b_curr * PERCENT_TO_HORIZON) / 5
             ) * 5;
 
         let horizon_3 =
@@ -460,6 +485,7 @@ function calculate() {
         // 1ПМ = вес × 36 / (37 - повторы)
         //
         // Для 3 повторов:
+        //
         // 1ПМ = вес × 36 / 34
         // ========================================================
 
@@ -490,20 +516,25 @@ function calculate() {
         // НАКЛОН
         // ========================================================
 
+        // FIX:
+        // Переменная теперь объявляется ДО обоих условий,
+        // поэтому доступна и в pC < 0.70, и в pC < 0.85.
+
+        let incline_reference =
+            Math.round(
+                (a_curr * 0.825) / 2.5
+            ) * 2.5;
+
+
         if (pC < 0.70) {
 
             adviceText +=
-                `\n\n⚠️ Свободный наклон сильно отстаёт → \n` +
+                `\n\n⚠️ Свободный наклон сильно отстаёт → ` +
                 `${incline_reference} кг.`;
 
         }
 
         else if (pC < 0.85) {
-
-            let incline_reference =
-                Math.round(
-                    (a_curr * 0.825) / 2.5
-                ) * 2.5;
 
             adviceText +=
                 `\n\nℹ️ Наклон немного отстаёт от ориентира 80–85% → ` +
@@ -533,38 +564,8 @@ function calculate() {
 
 
     // ============================================================
-    // ============================================================
     // ФИКСИРОВАННЫЙ ПРОГНОЗ ДЛЯ ЗЕЛЁНОГО ТРЕУГОЛЬНИКА
-    //
-    // ВАЖНО:
-    //
-    // Это отдельный прогноз именно для ГРАФИКА.
-    //
-    // Горизонт:
-    //     +7.5 кг
-    //
-    // Смит:
-    //     минимум горизонт +5 кг
-    //     но если текущий Смит уже выше —
-    //     сохраняем текущий уровень.
-    //
-    // Наклон:
-    //     минимум 80% от текущего горизонта
-    //     но если текущий наклон уже выше —
-    //     сохраняем текущий уровень.
-    //
-    // Поэтому:
-    //
-    // 120 / 110 / 90
-    // ->
-    // 127.5 / 125 / 95
-    //
-    // 120 / 125 / 100
-    // ->
-    // 127.5 / 125 / 100
     // ============================================================
-    // ============================================================
-
 
     // Горизонт следующего уровня
 
@@ -572,11 +573,9 @@ function calculate() {
         a_curr + STEP_BASE;
 
 
-    // Смит должен быть примерно выше
-    // будущего горизонта на 5 кг.
-    //
-    // Если текущий Смит уже выше —
-    // не уменьшаем его.
+    // ============================================================
+    // СМИТ
+    // ============================================================
 
     let triangle_b_min =
         a_curr + STEP_ADJUST;
@@ -588,11 +587,9 @@ function calculate() {
         );
 
 
-    // Наклон должен быть хотя бы 80%
-    // от текущего горизонта.
-    //
-    // Если текущий наклон уже выше —
-    // не уменьшаем его.
+    // ============================================================
+    // НАКЛОН
+    // ============================================================
 
     let triangle_c_min =
         Math.round(
@@ -606,7 +603,9 @@ function calculate() {
         );
 
 
-    // Округление прогнозного треугольника
+    // ============================================================
+    // ОКРУГЛЕНИЕ ПРОГНОЗНОГО ТРЕУГОЛЬНИКА
+    // ============================================================
 
     triangle_a_target =
         Math.round(
@@ -672,9 +671,6 @@ function calculate() {
 
     // ============================================================
     // ПРОГНОЗНЫЙ ТРЕУГОЛЬНИК
-    //
-    // Здесь используются НЕ a_target/b_target/c_target,
-    // а отдельные значения triangle_*_target.
     // ============================================================
 
     let coords_tar =
@@ -752,40 +748,47 @@ function calculate() {
     // ============================================================
 
     // Горизонт — прогноз из расчёта 1ПМ,
-// но никогда не опускаемся ниже текущего веса.
-let forecast_a =
-    Math.max(
-        a_curr,
-        a_target
-    );
+    // но никогда не опускаемся ниже текущего веса.
 
-// Смит и наклон — значения именно
-// из прогнозного треугольника.
-let forecast_b =
-    Math.max(
-        b_curr,
-        triangle_b_target
-    );
-
-let forecast_c =
-    Math.max(
-        c_curr,
-        triangle_c_target
-    );
+    let forecast_a =
+        Math.max(
+            a_curr,
+            a_target
+        );
 
 
-totalText +=
-    `\n\n<b>🔮 АВТО-ПРОГНОЗ:</b>\n`;
+    // Смит и наклон —
+    // значения именно из прогнозного треугольника.
 
-totalText +=
-    `Горизонтальный жим: ${a_curr} → ${forecast_a} кг\n`;
+    let forecast_b =
+        Math.max(
+            b_curr,
+            triangle_b_target
+        );
 
-totalText +=
-    `Смит 30°: ${b_curr} → ${forecast_b} кг\n`;
+    let forecast_c =
+        Math.max(
+            c_curr,
+            triangle_c_target
+        );
 
-totalText +=
-    `Наклон свободный: ${c_curr} → ${forecast_c} кг`;
 
+    totalText +=
+        `\n\n<b>🔮 АВТО-ПРОГНОЗ:</b>\n`;
+
+    totalText +=
+        `Горизонтальный жим: ${a_curr} → ${forecast_a} кг\n`;
+
+    totalText +=
+        `Смит 30°: ${b_curr} → ${forecast_b} кг\n`;
+
+    totalText +=
+        `Наклон свободный: ${c_curr} → ${forecast_c} кг`;
+
+
+    // ============================================================
+    // ВЫВОД
+    // ============================================================
 
     if (verdictBox) {
         verdictBox.innerHTML = totalText;
