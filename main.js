@@ -751,17 +751,37 @@ function calculate() {
     // АВТО-ПРОГНОЗ
     // ============================================================
 
-    totalText +=
-        `\n\n<b>🔮 АВТО-ПРОГНОЗ:</b>\n`;
+    // Горизонт — прогноз из расчёта 1ПМ,
+// но никогда не опускаемся ниже текущего веса.
+let forecast_a =
+    Math.max(
+        a_curr,
+        a_target
+    );
 
-    totalText +=
-        `Горизонтальный жим: ${a_curr} → ${a_target} кг\n`;
+// Смит и наклон — значения именно
+// из прогнозного треугольника.
+let forecast_b =
+    Math.max(
+        b_curr,
+        triangle_b_target
+    );
 
-    totalText +=
-        `Смит 30°: ${b_curr} → ${b_target} кг\n`;
+let forecast_c =
+    Math.max(
+        c_curr,
+        triangle_c_target
+    );
 
-    totalText +=
-        `Наклон свободный: ${c_curr} → ${c_target} кг`;
+
+totalText +=
+    `Горизонтальный жим: ${a_curr} → ${forecast_a} кг\n`;
+
+totalText +=
+    `Смит 30°: ${b_curr} → ${forecast_b} кг\n`;
+
+totalText +=
+    `Наклон свободный: ${c_curr} → ${forecast_c} кг`;
 
 
     if (verdictBox) {
