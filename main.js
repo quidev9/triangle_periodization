@@ -502,28 +502,51 @@ function calculate() {
         // НАКЛОН
         // ========================================================
 
+        // Конечный ориентир наклона = 80% от горизонта
         let incline_reference =
             Math.round(
                 (a_curr * 0.80) / 2.5
             ) * 2.5;
 
 
-        if (pC < 0.70) {
+        // Следующий шаг = максимум +5 кг.
+        // Поэтому не показываем сразу, например:
+        // 90 → 105.
+        //
+        // Будет:
+        // 90 → 95
+        // 95 → 100
+        // 100 → 105
 
-            // ИСПРАВЛЕНО:
-            // раньше здесь были сломанные кавычки
+        let incline_next =
+            Math.min(
+                c_curr + 5,
+                incline_reference
+            );
+
+
+        incline_next =
+            Math.round(
+                incline_next / 2.5
+            ) * 2.5;
+
+
+        if (pC < 0.70) {
 
             adviceText +=
                 `\n\n⚠️ Свободный наклон сильно отстаёт: ` +
-                `${c_curr} → ${incline_reference} кг.`;
+                `${c_curr} → ${incline_next} кг.`;
 
         }
 
         else if (pC <= 0.775) {
 
-            adviceText +=
-                `\n\nℹ️ Наклон немного отстаёт: ` +
-                `${c_curr} → ${incline_reference} кг.`;
+            if (incline_next > c_curr) {
+
+                adviceText +=
+                    `\n\nℹ️ Наклон немного отстаёт: ` +
+                    `${c_curr} → ${incline_next} кг.`;
+            }
         }
     }
 
@@ -575,27 +598,35 @@ function calculate() {
     // ============================================================
 
     const INCLINE_RATIO = 0.80;
-const MAX_INCLINE_STEP = 5;
+    const MAX_INCLINE_STEP = 5;
 
-// Желаемый уровень наклона относительно горизонта
-let triangle_c_reference =
-    Math.round(
-        (a_curr * INCLINE_RATIO) / 2.5
-    ) * 2.5;
 
-// За один прогноз добавляем максимум 5 кг
-let triangle_c_target =
-    Math.min(
-        c_curr + MAX_INCLINE_STEP,
-        triangle_c_reference
-    );
+    // Желаемый уровень наклона относительно горизонта
 
-// Никогда не уменьшаем текущий вес
-triangle_c_target =
-    Math.max(
-        c_curr,
-        triangle_c_target
-    );
+    let triangle_c_reference =
+        Math.round(
+            (a_curr * INCLINE_RATIO) / 2.5
+        ) * 2.5;
+
+
+    // За один прогноз добавляем максимум 5 кг
+
+    let triangle_c_target =
+        Math.min(
+            c_curr + MAX_INCLINE_STEP,
+            triangle_c_reference
+        );
+
+
+    // Никогда не уменьшаем текущий вес
+
+    triangle_c_target =
+        Math.max(
+            c_curr,
+            triangle_c_target
+        );
+
+
     // ============================================================
     // ОКРУГЛЕНИЕ ПРОГНОЗНОГО ТРЕУГОЛЬНИКА
     // ============================================================
