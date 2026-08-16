@@ -528,19 +528,19 @@ function calculate() {
 
         if (pC < 0.70) {
 
-            adviceText +=
-                `\n\n⚠️ Свободный наклон сильно отстаёт `${c_curr}`→ ` +
-                `${incline_reference} кг.`;
+           adviceText +=
+                `\n\n⚠️ Свободный наклон сильно отстаёт: ` +
+                `${c_curr} → ${incline_reference} кг.`;
 
         }
 
         else if (pC < 0.80) {
 
             adviceText +=
-                `\n\nℹ️ Наклон немного отстаёт `${c_curr}` → ` +
-                `${incline_reference} кг.`;
-        }
-    }
+                `\n\nℹ️ Наклон немного отстаёт: ` +
+                `${c_curr} → ${incline_reference} кг.`;
+   }
+  }
 
 
     // ============================================================
