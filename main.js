@@ -371,7 +371,7 @@ function calculate() {
     // НАСТРОЙКИ
     // ============================================================
 
-    const PERCENT_TO_HORIZON = 0.925;
+    const PERCENT_TO_HORIZON = 0.88;
     const BALANCE_TOLERANCE = 0.10;
 
     const STEP_BASE = 7.5;
@@ -467,7 +467,7 @@ function calculate() {
 
         let horizon_3 =
             Math.round(
-                (b_curr * 1) / 5
+                (b_curr * 0.96) / 5
             ) * 5;
 
 
