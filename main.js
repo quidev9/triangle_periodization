@@ -371,7 +371,7 @@ function calculate() {
     // НАСТРОЙКИ
     // ============================================================
 
-    const PERCENT_TO_HORIZON = 0.90;
+    const PERCENT_TO_HORIZON = 0.925;
     const BALANCE_TOLERANCE = 0.10;
 
     const STEP_BASE = 7.5;
