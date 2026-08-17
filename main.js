@@ -477,7 +477,7 @@ function calculate() {
 
         let oneRM =
             horizon_3 *
-            36 /
+            33 /
             (37 - 3);
 
 
